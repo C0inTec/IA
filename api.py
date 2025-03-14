@@ -47,8 +47,8 @@ def home():
 def classificar():
     try:
         data = request.json  # Recebe os dados do React Native no formato JSON
-        if not data:
-            return jsonify({"erro": "Nenhum dado recebido"}), 400
+        if not data or 'userId' not in data:
+            return jsonify({"erro": "Nenhum dado válido recebido"}), 400
 
         resultado = classificar_novo_usuario(data)
         return jsonify(resultado)
@@ -58,18 +58,42 @@ def classificar():
 
 # 📌 Função para classificar um novo usuário
 def classificar_novo_usuario(novo_usuario):
-    novo_usuario_df = pd.DataFrame([novo_usuario], columns=features)
+    user_id = novo_usuario.get("userId", None)
+
+    # Separando os dados do JSON para manter o formato desejado
+    ganhos = novo_usuario.get("ganhos", {})
+    despesas = novo_usuario.get("despesas", {})
+    investimentos = novo_usuario.get("investimentos", {})
+
+    # Convertendo para DataFrame com as features que a IA usa
+    novo_usuario_df = pd.DataFrame([{
+        "Água": despesas.get("água", 0),
+        "Celular": despesas.get("celular", 0),
+        "Luz": despesas.get("luz", 0),
+        "Internet": despesas.get("internet", 0),
+        "Aluguel": despesas.get("aluguel", 0),
+        "Cartão": despesas.get("cartão", 0),
+        "Lazer": despesas.get("lazer", 0),
+        "Apostas": despesas.get("apostas", 0),
+        "Emprego Fixo": ganhos.get("salario", 0),
+        "Bicos": ganhos.get("freelas", 0)
+    }])
+
     novo_usuario_normalizado = scaler.transform(novo_usuario_df)
     cluster_predito = knn.predict(novo_usuario_normalizado)[0]
 
     return {
-        "cluster": int(cluster_predito),
-        "descricao": descricao_clusters.get(cluster_predito, 'Cluster desconhecido')
+        "id": np.random.randint(1, 100),  # Gerando um ID aleatório
+        "userId": user_id,
+        "ganhos": ganhos,
+        "despesas": despesas,
+        "investimentos": investimentos,
+        "classificacao": {
+            "cluster": int(cluster_predito),
+            "descricao": descricao_clusters.get(cluster_predito, 'Cluster desconhecido')
+        }
     }
 
 # 📌 Executando a API
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-
-# Exemplo de como consultar a API
-# curl -X POST http://127.0.0.1:5000/classificar -H "Content-Type: application/json" -d '{"Água":50,"Celular":80,"Luz":120,"Internet":100,"Aluguel":800,"Cartão":300,"Lazer":200,"Apostas":50,"Emprego Fixo":2500,"Bicos":500}'

@@ -6,3 +6,4 @@ openpyxl
 scikit_learn
 seaborn
 uvicorn
+flask_cors
