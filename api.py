@@ -70,3 +70,6 @@ def classificar_novo_usuario(novo_usuario):
 # 📌 Executando a API
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
+
+# Exemplo de como consultar a API
+# curl -X POST http://127.0.0.1:5000/classificar -H "Content-Type: application/json" -d '{"Água":50,"Celular":80,"Luz":120,"Internet":100,"Aluguel":800,"Cartão":300,"Lazer":200,"Apostas":50,"Emprego Fixo":2500,"Bicos":500}'
