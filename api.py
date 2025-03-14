@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify 
 from flask_cors import CORS
 import pandas as pd
 import numpy as np
@@ -46,52 +46,49 @@ def home():
 @app.route('/classificar', methods=['POST'])
 def classificar():
     try:
-        data = request.json  # Recebe os dados do React Native no formato JSON
-        if not data or 'userId' not in data:
-            return jsonify({"erro": "Nenhum dado válido recebido"}), 400
+        data = request.json  # Recebe os dados JSON
+        if not data:
+            return jsonify({"erro": "Nenhum dado recebido"}), 400
 
-        resultado = classificar_novo_usuario(data)
+        # 🔹 Processar os dados recebidos para o formato correto
+        novo_usuario = processar_dados(data)
+        
+        # 🔹 Classificar com IA
+        resultado = classificar_novo_usuario(novo_usuario)
+
         return jsonify(resultado)
 
     except Exception as e:
         return jsonify({"erro": str(e)}), 500
 
-# 📌 Função para classificar um novo usuário
-def classificar_novo_usuario(novo_usuario):
-    user_id = novo_usuario.get("userId", None)
+# 📌 Função para processar os dados recebidos no formato correto
+def processar_dados(data):
+    ganhos = data.get("ganhos", {})
+    despesas = data.get("despesas", {})
+    investimentos = data.get("investimentos", {})
 
-    # Separando os dados do JSON para manter o formato desejado
-    ganhos = novo_usuario.get("ganhos", {})
-    despesas = novo_usuario.get("despesas", {})
-    investimentos = novo_usuario.get("investimentos", {})
-
-    # Convertendo para DataFrame com as features que a IA usa
-    novo_usuario_df = pd.DataFrame([{
-        "Água": despesas.get("água", 0),
+    return {
+        "Água": despesas.get("agua", 0),
         "Celular": despesas.get("celular", 0),
         "Luz": despesas.get("luz", 0),
         "Internet": despesas.get("internet", 0),
         "Aluguel": despesas.get("aluguel", 0),
-        "Cartão": despesas.get("cartão", 0),
+        "Cartão": despesas.get("cartao", 0),
         "Lazer": despesas.get("lazer", 0),
         "Apostas": despesas.get("apostas", 0),
-        "Emprego Fixo": ganhos.get("salario", 0),
-        "Bicos": ganhos.get("freelas", 0)
-    }])
+        "Emprego Fixo": ganhos.get("salario", 0) + ganhos.get("freelas", 0),
+        "Bicos": ganhos.get("bonus", 0) + ganhos.get("outros", 0) + ganhos.get("dividendos", 0),
+    }
 
+# 📌 Função para classificar um novo usuário
+def classificar_novo_usuario(novo_usuario):
+    novo_usuario_df = pd.DataFrame([novo_usuario], columns=features)
     novo_usuario_normalizado = scaler.transform(novo_usuario_df)
     cluster_predito = knn.predict(novo_usuario_normalizado)[0]
 
     return {
-        "id": np.random.randint(1, 100),  # Gerando um ID aleatório
-        "userId": user_id,
-        "ganhos": ganhos,
-        "despesas": despesas,
-        "investimentos": investimentos,
-        "classificacao": {
-            "cluster": int(cluster_predito),
-            "descricao": descricao_clusters.get(cluster_predito, 'Cluster desconhecido')
-        }
+        "cluster": int(cluster_predito),
+        "descricao": descricao_clusters.get(cluster_predito, 'Cluster desconhecido')
     }
 
 # 📌 Executando a API
