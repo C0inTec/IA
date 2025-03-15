@@ -10,9 +10,9 @@ from sklearn.model_selection import train_test_split
 app = Flask(__name__)
 CORS(app)
 
-ganhos = pd.read_excel('usuarios_500.xlsx', sheet_name="Ganhos")
-despesas = pd.read_excel('usuarios_500.xlsx', sheet_name="Despesas")
-investimentos = pd.read_excel('usuarios_500.xlsx', sheet_name="Investimentos")
+ganhos = pd.read_excel('usuarios_500_realista.xlsx', sheet_name="Ganhos")
+despesas = pd.read_excel('usuarios_500_realista.xlsx', sheet_name="Despesas")
+investimentos = pd.read_excel('usuarios_500_realista.xlsx', sheet_name="Investimentos")
 
 
 for df in [ganhos, despesas, investimentos]:
